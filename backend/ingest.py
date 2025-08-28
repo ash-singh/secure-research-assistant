@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import argparse
 from retrieval import retrieve_chunks  # only for retrieval after build
 from embeddings import build_embeddings, model
 from config import DATA_DIR, EMBEDDING_DIR, CHUNK_SIZE
@@ -59,3 +60,15 @@ def build_index():
     np.save(f"{EMBEDDING_DIR}/chunks_meta.npy",
             [{"text": c, "source": "documents"} for c in all_chunks])
     print(f"FAISS index built with {len(all_chunks)} chunks.")
+
+# ---------------------------
+# Command-line interface
+# ---------------------------
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Document ingestion & FAISS index builder")
+    parser.add_argument("--preprocess-all", action="store_true",
+                        help="Preprocess all documents in DATA_DIR and rebuild FAISS index")
+    args = parser.parse_args()
+
+    if args.preprocess_all:
+        build_index()
