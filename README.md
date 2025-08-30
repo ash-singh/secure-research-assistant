@@ -185,7 +185,7 @@ VITE_API_URL=http://localhost:8000/query
 4. Start the development server
 
 ```bash
-npm start
+npm run dev
 ```
 
 * Runs the frontend at [http://localhost:5173](http://localhost:5173)

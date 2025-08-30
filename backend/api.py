@@ -1,3 +1,5 @@
+import logging
+
 import requests
 import faiss
 import os
@@ -5,11 +7,12 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
+from prompt import get_prompt
 from retrieval import retrieve_chunks
 from config import LMSTUDIO_API_URL,DATA_DIR,LLM_MODEL, CHUNK_SIZE, TOP_K, EMBEDDING_MODEL, EMBEDDING_DIR
-from utils import extract_text_from_pdf, extract_text_from_docx, chunk_text, allowed_file
+from utils import extract_text_from_pdf, extract_text_from_docx, chunk_text, allowed_file, extract_sources
 from embeddings import build_embeddings, get_embedding
-from ingest import build_index, chunk_text, extract_text_from_pdf, extract_text_from_docx
+from ingest import chunk_text, extract_text_from_pdf, extract_text_from_docx
 
 import numpy as np
 
@@ -22,25 +25,6 @@ CORS(app, origins=["http://localhost:5173"])
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(EMBEDDING_DIR, exist_ok=True)
 
-
-# ---------------------------
-# Load or build FAISS index
-# ---------------------------
-index_path = f"{EMBEDDING_DIR}/document_index.faiss"
-meta_path = f"{EMBEDDING_DIR}/chunks_meta.npy"
-
-if os.path.exists(index_path) and os.path.exists(meta_path):
-    index = faiss.read_index(index_path)
-    chunks_meta = list(np.load(meta_path, allow_pickle=True))
-    print(f"Loaded FAISS index with {len(chunks_meta)} chunks.")
-else:
-    print("FAISS index not found. Building index...")
-    build_index()
-    index = faiss.read_index(index_path)
-    chunks_meta = list(np.load(meta_path, allow_pickle=True))
-    print(f"FAISS index built and loaded with {len(chunks_meta)} chunks.")
-
-
 @app.route("/query", methods=["POST"])
 def query():
     data = request.get_json()
@@ -52,16 +36,20 @@ def query():
 
     # Retrieve context chunks
     context_chunks = retrieve_chunks(user_question)
-    context_text = "\n\n".join(context_chunks)
 
-    # Build LM Studio chat messages
-    messages = [
-        {"role": "system", "content": "You are a helpful research assistant."},
-        {"role": "user",
-         "content": f"Use the following context to answer the question:\n{context_text}\nQuestion: {user_question}"}
-    ]
+    # Build context text for LLM
+    context_text = "\n\n".join(
+        f"[Source: {chunk.get('source', f'retrieved_doc_{i + 1}')}]"
+        f"\n{chunk['text']}"
+        for i, chunk in enumerate(context_chunks)
+    )
 
-    print(f"Sending messages to LM Studio: {messages}")
+    print(f"Context text: {context_text}")
+
+    messages = get_prompt(context_text, user_question)
+
+    logging.info(f"Sending messages to LM Studio: {messages}")
+    #print(f"Sending messages to LM Studio: {messages}")
 
     # Call LM Studio API
     try:
@@ -70,23 +58,38 @@ def query():
             json={
                 "model": LLM_MODEL,
                 "messages": messages,
-                "max_tokens": 300
+                "max_tokens": 10000
             },
-            timeout=60
+            timeout=120
         )
         response.raise_for_status()
         lm_data = response.json()
+
         choice = lm_data["choices"][0]["message"]
         answer = choice.get("content", "")
         reasoning = choice.get("reasoning", "")
+
+        # Extract cited sources
+        cited_sources = extract_sources(answer)
+
+        # Fallback: if no valid sources found or LLM used 'unknown', return actual retrieved docs
+        if not cited_sources or "unknown" in cited_sources:
+            seen = set()
+            cited_sources = []
+            for chunk in context_chunks:
+                doc = chunk['source']
+                if doc not in seen:
+                    cited_sources.append(doc)
+                    seen.add(doc)
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    print(f"Received answer: reasoning: sources {answer} {reasoning} {context_chunks}")
+    logging.info(f"Received answer: reasoning: sources {answer} {reasoning} {cited_sources}")
     return jsonify({
         "answer": answer,
         "reasoning": reasoning,
-        "sources": context_chunks
+        "sources": cited_sources
     })
 
 @app.route("/upload", methods=["POST"])

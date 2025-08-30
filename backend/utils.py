@@ -1,4 +1,4 @@
-import os
+import re
 from PyPDF2 import PdfReader
 from docx import Document
 
@@ -19,4 +19,9 @@ def chunk_text(text, chunk_size=500):
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def extract_sources(answer: str):
+    """Extract unique doc names cited in the answer."""
+    pattern = r"\[Source:\s*([^\]]+)\]"
+    return list(dict.fromkeys(re.findall(pattern, answer)))
 

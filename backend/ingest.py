@@ -1,7 +1,7 @@
+import logging
 import os
 import numpy as np
 import argparse
-from retrieval import retrieve_chunks  # only for retrieval after build
 from embeddings import build_embeddings, model
 from config import DATA_DIR, EMBEDDING_DIR, CHUNK_SIZE
 from PyPDF2 import PdfReader
@@ -51,7 +51,7 @@ def build_index():
         all_chunks.extend(chunk_text(text, CHUNK_SIZE))
 
     if not all_chunks:
-        raise RuntimeError("No documents found in DATA_DIR!")
+        raise RuntimeWarning(f"No documents found in {DATA_DIR}!")
 
     index, embeddings = build_embeddings(all_chunks)
     os.makedirs(EMBEDDING_DIR, exist_ok=True)

@@ -35,7 +35,7 @@ function App() {
       <h1>Offline Research Assistant</h1>
       <Upload />
       <QueryBox onSubmit={askQuestion} loading={loading} />
-      <AnswerBox answer={answer} />
+      <AnswerBox answer={answer} sources={sources} />
     </div>
   );
 }
