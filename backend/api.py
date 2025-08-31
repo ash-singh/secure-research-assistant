@@ -1,20 +1,19 @@
 import logging
-
-import requests
-import faiss
 import os
+
+import faiss
+import numpy as np
+import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
+from config import LMSTUDIO_API_URL, DATA_DIR, LLM_MODEL, CHUNK_SIZE, EMBEDDING_DIR
+from embeddings import build_embeddings
+from ingest import chunk_text, extract_text_from_pdf, extract_text_from_docx
 from prompt import get_prompt
 from retrieval import retrieve_chunks
-from config import LMSTUDIO_API_URL,DATA_DIR,LLM_MODEL, CHUNK_SIZE, TOP_K, EMBEDDING_MODEL, EMBEDDING_DIR
 from utils import extract_text_from_pdf, extract_text_from_docx, chunk_text, allowed_file, extract_sources
-from embeddings import build_embeddings, get_embedding
-from ingest import chunk_text, extract_text_from_pdf, extract_text_from_docx
-
-import numpy as np
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173"])
