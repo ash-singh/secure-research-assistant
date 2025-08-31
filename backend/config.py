@@ -15,4 +15,7 @@ LLM_MODEL = os.getenv("LLM_MODEL", "openai/gpt-oss-20b")
 DATA_DIR = os.getenv("DATA_DIR", "../data/documents")
 EMBEDDING_DIR = os.getenv("EMBEDDING_DIR", "../data/embeddings")
 
+DATABASE_FILE = os.getenv("DATABASE_FILE", "../data/metadata.db")
+INDEX_DIR = os.getenv("INDEX_DIR", "../index")
+
 
