@@ -181,38 +181,9 @@ gunicorn -w 4 backend.api:app
 
 ---
 
-## Frontend Setup
+## Launch Streamlit Frontend
 
-1. Navigate to the frontend directory
-
-```bash
-cd frontend
-```
-
-2. Install dependencies
 
 ```bash
-npm install
-```
-
-3. Configure environment variables
-
-Create `.env` in `frontend/` (Vite requires `VITE__` prefix):
-
-```env
-VITE_API_URL=http://localhost:8000/query
-```
-
-4. Start the development server
-
-```bash
-npm run dev
-```
-
-* Runs the frontend at [http://localhost:5173](http://localhost:5173)
-
-5. Build for production
-
-```bash
-npm run build
+streamlit run frontend/chat.py
 ```

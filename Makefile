@@ -1,4 +1,4 @@
-start:
-	uv run backend/api.py
+server:
+	uv run backend/app.py
 chat:
 	streamlit run frontend/chat.py
