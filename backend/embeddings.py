@@ -1,4 +1,3 @@
-import numpy as np
 from sentence_transformers import SentenceTransformer
 
 # Load your embedding model once
