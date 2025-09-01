@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import json
+import time
 
 # -------------------------------
 # Backend configuration
@@ -13,7 +14,7 @@ API_URL = "http://localhost:8000"
 if "docs" not in st.session_state:
     st.session_state.docs = []  # [{"id": ..., "filename": ...}]
 if "history" not in st.session_state:
-    st.session_state.history = []  # [{"question":..., "answer":..., "sources":...}]
+    st.session_state.history = []  # [{"question":..., "answer":..., "sources":..., "elapsed_time":...}]
 if "notes" not in st.session_state:
     st.session_state.notes = []  # saved answers
 if "uploaded_file" not in st.session_state:
@@ -94,12 +95,17 @@ with tab1:
     if query:
         with st.spinner("Thinking..."):
             try:
+                start_time = time.time()
                 r = requests.post(
                     f"{API_URL}/ask",
                     json={"question": query, "allow_fallback": allow_fallback}
                 )
+                elapsed_time = time.time() - start_time
+
                 r.raise_for_status()
                 result = r.json()
+                result["elapsed_time"] = elapsed_time
+                result["question"] = query  # ensure stored in history
             except Exception as e:
                 st.error(f"Query failed: {e}")
                 result = None
@@ -111,6 +117,9 @@ with tab1:
             # Display answer
             st.markdown("### 🧠 Answer")
             st.write(result.get("answer", ""))
+
+            # Show response time
+            st.caption(f"⏱️ Response time: {result['elapsed_time']:.2f} seconds")
 
             # Sources expandable
             sources = result.get("sources", [])
@@ -131,7 +140,11 @@ with tab1:
     if st.session_state.history:
         st.markdown("### Recent Questions")
         for h in reversed(st.session_state.history[-5:]):
-            st.markdown(f"**Q:** {h.get('question','')}\n**A:** {h.get('answer','')[:200]}...")
+            st.markdown(
+                f"**Q:** {h.get('question','')}\n"
+                f"**A:** {h.get('answer','')[:200]}...\n"
+                f"_⏱️ {h.get('elapsed_time',0):.2f} sec_"
+            )
 
 # -------------------------------
 # Tab 2: Notebook
@@ -142,6 +155,8 @@ with tab2:
         for i, note in enumerate(st.session_state.notes):
             st.markdown(f"**Q:** {note.get('question','')}")
             st.write(note.get("answer",""))
+            if "elapsed_time" in note:
+                st.caption(f"⏱️ Response time: {note['elapsed_time']:.2f} seconds")
             st.markdown("---")
 
         # Export as JSON

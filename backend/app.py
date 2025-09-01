@@ -20,6 +20,9 @@ from utils import (
     extract_sources,
 )
 
+logging.basicConfig(level=logging.INFO)
+logging.info("🔍 Logging configured and working!")
+
 # ---------------------------
 # Flask app
 # ---------------------------
@@ -68,7 +71,7 @@ def ask():
     if not user_question:
         return jsonify({"error": "No question provided"}), 400
 
-    logging.info(f"Received question: {user_question}")
+    logging.info(f"Received question: {user_question} allow_fallback: {allow_fallback} ")
 
     try:
         # Retrieve context chunks

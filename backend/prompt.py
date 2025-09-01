@@ -7,11 +7,7 @@ def get_prompt(user_question, context_text, allow_fallback=False, extra_rules=No
 Rules:
 1. Use the provided context as the primary source for answers.
 2. If the answer is in the context, always cite the source using [Source: filename].
-3. If the answer is not in the context:
-   - If fallback is allowed, answer from your own knowledge BUT clearly state: 
-     "⚠️ This part of the answer is not based on the provided context."
-   - If fallback is not allowed, reply: "I don’t know."
-4. Never mix hallucinated information with contextual information.
+3. Never mix hallucinated information with contextual information.
 """
     if extra_rules:
         system_content += "\n" + extra_rules
@@ -34,12 +30,12 @@ Context:
     return prompt
 
 
-def truncate_context(chunks, user_question, max_tokens=LLM_MODEL_MAX_TOKENS, model=LLM_MODEL):
+def truncate_context(chunks, user_question, max_tokens=LLM_MODEL_MAX_TOKENS, model='cl100k_base'):
     """
     Truncate context to fit within max_tokens.
     Always keeps the user_question fully.
     """
-    enc = tiktoken.encoding_for_model(model)
+    enc = tiktoken.get_encoding(model)
 
     # Start budget with question
     q_tokens = len(enc.encode(user_question))
