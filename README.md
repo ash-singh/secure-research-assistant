@@ -170,7 +170,7 @@ EMBEDDING_DIR=data/embeddings
 ### 5. Run the backend server
 
 ```bash
-uv run backend/api.py
+uv run backend/app.py
 ```
 
 **Optional:** Run with Gunicorn for production:
