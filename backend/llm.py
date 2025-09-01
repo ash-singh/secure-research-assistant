@@ -1,6 +1,6 @@
 import requests
 
-from config import LMSTUDIO_API_URL, LLM_MODEL
+from config import LMSTUDIO_API_URL, LLM_MODEL, LLM_MODEL_MAX_TOKENS
 
 def query_llm(prompt: str):
     response = requests.post(
@@ -8,7 +8,7 @@ def query_llm(prompt: str):
         json={
             "model": LLM_MODEL,
             "messages": prompt,
-            "max_tokens": 10000
+            "max_tokens": LLM_MODEL_MAX_TOKENS
         },
         timeout=120
     )

@@ -80,12 +80,24 @@ tab1, tab2 = st.tabs(["🔍 Research", "📝 Notebook"])
 # -------------------------------
 with tab1:
     st.subheader("Ask a Research Question")
-    query = st.text_input("Enter your question:", placeholder="e.g. What are the main findings in doc X?")
+
+    query = st.text_input(
+        "Enter your question:",
+        placeholder="e.g. What are the main findings in doc X?"
+    )
+
+    allow_fallback = st.toggle(
+        "Allow fallback to LLM knowledge if context is insufficient",
+        value=False
+    )
 
     if query:
         with st.spinner("Thinking..."):
             try:
-                r = requests.get(f"{API_URL}/ask", params={"q": query})
+                r = requests.post(
+                    f"{API_URL}/ask",
+                    json={"question": query, "allow_fallback": allow_fallback}
+                )
                 r.raise_for_status()
                 result = r.json()
             except Exception as e:

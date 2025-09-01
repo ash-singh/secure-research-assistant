@@ -56,10 +56,12 @@ def rebuild_index():
 # ---------------------------
 @app.route("/ask", methods=["GET", "POST"])
 def ask():
+    allow_fallback = False
     # Support GET (for Streamlit) or POST (future API clients)
     if request.method == "POST":
         data = request.get_json()
         user_question = data.get("question")
+        allow_fallback = data.get("allow_fallback", False)
     else:
         user_question = request.args.get("q")
 
@@ -80,7 +82,7 @@ def ask():
         )
 
         # Build prompt
-        prompt = get_prompt(context_text, user_question)
+        prompt = get_prompt(context_text, user_question, allow_fallback=allow_fallback)
 
         # Query local LLM
         choice = query_llm(prompt)
