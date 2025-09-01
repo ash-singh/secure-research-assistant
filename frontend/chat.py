@@ -1,3 +1,5 @@
+import os
+
 import streamlit as st
 import requests
 import json
@@ -86,10 +88,11 @@ with tab1:
         "Enter your question:",
         placeholder="e.g. What are the main findings in doc X?"
     )
-
+    # Fallback toggle from env
+    allow_fallback_default = os.getenv("STREAMLIT_ALLOW_FALLBACK", "True") == "True"
     allow_fallback = st.toggle(
         "Allow fallback to LLM knowledge if context is insufficient",
-        value=False
+        value=allow_fallback_default
     )
 
     if query:
