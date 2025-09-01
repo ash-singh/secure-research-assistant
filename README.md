@@ -35,34 +35,64 @@ https://lmstudio.ai/
 **Benefit:** Allows a 20B model to answer long-document questions without exceeding the context window  
 
 ### E. Frontend / UI
-- **Options:** Web UI (Vite, React) or desktop Electron app (offline)  
+- **Framework**: Streamlit (offline, Python-based)
 - **Features:**  
-  - Upload documents  
-  - Search & query interface  
-  - Display answers with reference snippets  
-  - Optional history/log of past queries  
+  - Upload documents (PDF, DOCX, TXT)
+  - Search & query interface
+  - Display answers with reference snippets
+  - Optional toggle to allow fallback to LLM knowledge if context is insufficient
+  - Show total response time for each query
+  - Notebook/history for past queries 
 
 ```scss
-[User] 
-   │
-   ▼
-[Frontend UI]  ←→  [Local API / LM Studio]
-                        │
-                        ▼
-           ┌─────────────────────┐
-           │  20B LLM (LM Studio) │
-           └─────────────────────┘
-                        ▲
-                        │
-             [Prompt with context]
-                        ▲
-                        │
-            ┌────────────────────┐
-            │ Vector DB (FAISS)  │
-            └────────────────────┘
-                        ▲
-                        │
-              [Document Chunks + Embeddings]
+       ┌───────────────┐
+       │   User (You)  │
+       └───────┬───────┘
+               │
+               ▼
+      ┌─────────────────┐
+      │ Streamlit UI     │
+      │ - Upload docs    │
+      │ - Ask questions  │
+      │ - View answers   │
+      │ - Response time  │
+      └───────┬─────────┘
+              │
+              ▼
+     ┌─────────────────────┐
+     │ Local Backend API    │
+     │ - /docs              │
+     │ - /ask               │
+     │ - Manage FAISS index │
+     └───────┬─────────────┘
+             │
+             ▼
+    ┌───────────────────────┐
+    │ FAISS Vector DB        │
+    │ - Embeddings via       │
+    │   all-MiniLM-L6-v2    │
+    │ - Retrieve top-K chunks│
+    └───────┬───────────────┘
+             │
+             ▼
+    ┌───────────────────────┐
+    │ LM Studio 20B LLM     │
+    │ - Receives prompt:    │
+    │   "Question + Context"│
+    │ - Generates answer     │
+    │ - Optionally fallback │
+    │   to own knowledge    │
+    └──────────────┬────────┘
+                   │
+                   ▼
+          ┌────────────────┐
+          │ Answer + Sources│
+          │ + Response Time │
+          └────────────────┘
+                   │
+                   ▼
+            Streamlit UI displays
+
 
 ```
 ---
@@ -85,39 +115,30 @@ cd secure-research-assistant
 secure-research-assistant/
 │
 ├── backend/
-│   ├── __init__.py
-│   ├── api.py               # Local API server to communicate with LM Studio
-│   ├── ingest.py            # Document ingestion and chunking
-│   ├── embeddings.py        # Generate embeddings and manage FAISS index
-│   ├── retrieval.py         # Retrieve relevant chunks (RAG)
-│   ├── config.py            # Config for model paths, ports, chunk sizes
-│   └── utils.py             # Helper functions (PDF/DOCX reading, text cleaning)
+│   ├── api.py
+│   ├── ingest.py
+│   ├── embeddings.py
+│   ├── retrieval.py
+│   ├── config.py
+│   └── utils.py
 │
 ├── frontend/
-│   ├── package.json
-│   ├── public/
-│   └── src/
-│       ├── App.jsx          # Main React component
-│       ├── components/
-│       │   ├── Upload.jsx   # Upload document component
-│       │   ├── QueryBox.jsx # User input box
-│       │   └── AnswerBox.jsx# Display answers
-│       └── api.js           # JS functions to call backend API
+│   └── chat.py          # Streamlit UI
 │
 ├── models/
-│   └── 20B_model/           # LM Studio model directory
+│   └── 20B_model/       # LM Studio model directory
 │
 ├── data/
-│   ├── documents/            # Uploaded documents
-│   └── embeddings/           # Saved FAISS index files
+│   ├── documents/       # Uploaded documents
+│   └── embeddings/      # FAISS index files
 │
 ├── scripts/
-│   ├── start_backend.sh      # Launch backend API
-│   ├── start_frontend.sh     # Launch React/Electron UI
-│   └── preprocess_docs.sh    # Optional batch preprocessing of documents
+│   ├── start_backend.sh
+│   └── preprocess_docs.sh
 │
 ├── README.md
-└── requirements.txt          # Python dependencies
+└── requirements.txt
+
 
 ```
 ### 3. Create virtual environment & install dependencies
